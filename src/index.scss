@@ -1,0 +1,8 @@
+@use "@picocss/pico";
+
+textarea.code {
+  font-family: monospace;
+  white-space: pre-wrap;
+  font-size: 12px;
+  height: 10rem;
+}
