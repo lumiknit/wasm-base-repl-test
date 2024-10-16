@@ -2,6 +2,11 @@ import { Component } from "solid-js";
 import toast, { Toaster } from "solid-toast";
 import wabt from "wabt";
 
+import "./lib/s-parser";
+import InstructionView from "./Instruction";
+import CodeEditView from "./CodeEditView";
+import { parseSExpr } from "./lib/s-parser";
+
 const u8toHex = (arr: Uint8Array) => {
   // Each line has 16 bytes
   let lines = [];
@@ -23,6 +28,7 @@ const convertWatToWasm = async (wat: string) => {
 };
 
 const App: Component = () => {
+  let parseResultRef: HTMLPreElement;
   let watRef: HTMLTextAreaElement;
   let wasmRef: HTMLTextAreaElement;
   let resultRef: HTMLPreElement;
@@ -49,29 +55,39 @@ const App: Component = () => {
     toast.success("Execute button clicked!");
   };
 
+  const handleSubmit = (code: string) => {
+    // Set the code to the textarea
+    let parsed;
+    try {
+      parsed = parseSExpr(code);
+    } catch (e) {
+      toast.error(String(e));
+      parseResultRef!.innerText = String(e);
+      return;
+    }
+
+    // Display the parsed result
+    parseResultRef!.innerText = JSON.stringify(parsed, null, 2);
+  };
+
   return (
     <>
       <Toaster />
       <main class="container">
-        <h1> WASM Test </h1>
-        <button class="btn" onClick={handleConvert}>
-          {" "}
-          Convert{" "}
-        </button>
-        <div class="grid">
-          <div>
-            <h2> .wat </h2>
-            <textarea ref={watRef!} class="code" />
-          </div>
-          <div>
-            <h2> .wasm </h2>
-            <textarea ref={wasmRef!} class="code" />
-          </div>
-        </div>
-        <div>
-          <button onClick={handleExecute}> Execute </button>
-          <pre ref={resultRef}></pre>
-        </div>
+        <h1> Simple Interpreter </h1>
+
+        <InstructionView />
+
+        <CodeEditView onSubmit={handleSubmit} />
+
+        <h2> Parsed Result </h2>
+        <pre ref={parseResultRef!} />
+
+        <h2> Compiled .wat </h2>
+        <pre ref={watRef!} class="code" />
+
+        <h2> Compiled .wasm </h2>
+        <pre ref={wasmRef!} class="code" />
       </main>
     </>
   );
